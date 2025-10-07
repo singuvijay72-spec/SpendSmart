@@ -12,6 +12,10 @@ import {
   Legend,
 } from "recharts";
 
+import SpendSmartClean from "./SpendSmartClean.png";
+import SpendSmartDark from "./SpendsmartDark.png";
+import SpendSmartAesthetic from "./SpendSmartAesthetic.png";
+
 const uid = () => Math.random().toString(36).slice(2, 9);
 const loadFromStorage = (k, f) => {
   try {
@@ -226,6 +230,13 @@ export default function app() {
     };
   }, [filtered]);
 
+  const logoSrc =
+    theme === "clean"
+      ? SpendSmartClean
+      : theme === "dark"
+      ? SpendSmartDark
+      : SpendSmartAesthetic;
+
   return (
     <div
       className="app-root"
@@ -255,32 +266,17 @@ export default function app() {
 
       <div className="topbar">
         <div className="brand">
-          <div
+          <img
+            src={logoSrc}
+            alt="SpendSmart logo"
             style={{
               width: 44,
               height: 44,
               borderRadius: 10,
-              background: "linear-gradient(135deg,#ffffff55,#ffffff22)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              objectFit: "cover",
               boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
             }}
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12 2L15 8l6 1-4.5 4 1 6L12 17l-6.5 2 1-6L2 9l6-1 3-6z"
-                fill="#fff"
-                opacity="0.9"
-              />
-            </svg>
-          </div>
+          />
           <div>
             SpendSmart{" "}
             <span
