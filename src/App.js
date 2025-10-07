@@ -38,26 +38,11 @@ const aggregateForBarChart = (items) => {
   });
   return Object.keys(map).map((k) => ({ label: k, value: map[k] }));
 };
-const pickColor = (i) => {
-  const palette = [
-    "#8B5CF6",
-    "#34D399",
-    "#F59E0B",
-    "#FB7185",
-    "#7C3AED",
-    "#60A5FA",
-  ];
-  return palette[i % palette.length];
-};
+const pickColor = (i) =>
+  ["#8B5CF6", "#34D399", "#F59E0B", "#FB7185", "#7C3AED", "#60A5FA"][i % 6];
 
 const IconSun = ({ size = 18 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <path
       stroke="currentColor"
       strokeWidth="1.6"
@@ -68,13 +53,7 @@ const IconSun = ({ size = 18 }) => (
   </svg>
 );
 const IconMoon = ({ size = 18 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <path
       stroke="currentColor"
       strokeWidth="1.6"
@@ -85,13 +64,7 @@ const IconMoon = ({ size = 18 }) => (
   </svg>
 );
 const IconSparkle = ({ size = 18 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <path
       stroke="currentColor"
       strokeWidth="1.6"
@@ -112,6 +85,7 @@ function ExpenseForm({ onAdd }) {
     e.preventDefault();
     if (!amount || !category) return;
     onAdd({
+      id: uid(),
       amount: Number(amount),
       category: category.trim() || "Other",
       note: note.trim(),
@@ -127,35 +101,35 @@ function ExpenseForm({ onAdd }) {
     <form onSubmit={submit} className="es-form">
       <div className="es-row">
         <input
-          className="es-input"
           type="number"
           placeholder="Amount (₹)"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
+          className="es-input"
         />
         <input
-          className="es-input"
           type="text"
           placeholder="Category (e.g. Food)"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
+          className="es-input"
         />
       </div>
       <input
-        className="es-input"
         type="text"
         placeholder="Note (optional)"
         value={note}
         onChange={(e) => setNote(e.target.value)}
+        className="es-input"
       />
       <div className="es-row">
         <input
-          className="es-input"
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
+          className="es-input"
         />
-        <button className="btn-primary" type="submit">
+        <button type="submit" className="btn-primary">
           Add
         </button>
       </div>
@@ -163,41 +137,36 @@ function ExpenseForm({ onAdd }) {
   );
 }
 
-export default function app() {
+export default function App() {
+  const [showTransition, setShowTransition] = useState(true);
+  const [fadeInDashboard, setFadeInDashboard] = useState(false);
+  const [theme, setTheme] = useState("aesthetic");
+  const [expenses, setExpenses] = useState(loadFromStorage("ss-expenses", []));
+  const [filterDate, setFilterDate] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
+
   const THEMES = {
     clean: {
-      name: "Clean",
       bg: "linear-gradient(180deg,#f8fafc,#eef2ff)",
       text: "#0f172a",
       card: "rgba(255,255,255,0.6)",
     },
     dark: {
-      name: "Dark",
       bg: "linear-gradient(180deg,#0f1724,#071124)",
       text: "#7C8AA2",
       card: "rgba(10,10,10,0.6)",
     },
     aesthetic: {
-      name: "Aesthetic",
       bg: "linear-gradient(135deg,#fdf4ff 0%, #e6f4ff 60%)",
       text: "#4a148c",
       card: "rgba(255,255,255,0.55)",
     },
   };
-
-  const [theme, setTheme] = useState("aesthetic");
   const cfg = THEMES[theme];
-
-  const [expenses, setExpenses] = useState(loadFromStorage("ss-expenses", []));
-  const [filterDate, setFilterDate] = useState("");
-  const [filterMonth, setFilterMonth] = useState("");
 
   useEffect(() => saveToStorage("ss-expenses", expenses), [expenses]);
 
-  const addExpense = (obj) => {
-    const e = { id: uid(), ...obj };
-    setExpenses((s) => [e, ...s]);
-  };
+  const addExpense = (obj) => setExpenses((s) => [obj, ...s]);
   const removeExpense = (id) =>
     setExpenses((s) => s.filter((x) => x.id !== id));
 
@@ -237,22 +206,32 @@ export default function app() {
       ? SpendSmartDark
       : SpendSmartAesthetic;
 
+  const handleLogoClick = () => {
+    document.querySelector(".transition-overlay").classList.add("fade-out");
+    setTimeout(() => {
+      setShowTransition(false);
+      setFadeInDashboard(true);
+    }, 1000);
+  };
+
   return (
-    <div
-      className="app-root"
-      style={{ background: cfg.bg, color: cfg.text, minHeight: "100vh" }}
-    >
+    <>
       <style>{`
-        /* Embedded styles for single-file usage */
-        :root{font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
-        .app-root{padding:28px}
+        .transition-overlay {position:fixed;inset:0;background:linear-gradient(180deg,#0f1724,#071124);display:flex;justify-content:center;align-items:center;z-index:9999;transition:opacity 1s ease;}
+        .transition-logo {width:180px;cursor:pointer;transition:transform .4s ease;}
+        .transition-logo:hover {transform:scale(1.1);}
+        .fade-out {opacity:0;pointer-events:none;}
+        :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial}
+        .app-root{padding:28px;opacity:0;transition:opacity 1s ease;}
+        .fade-in{opacity:1;}
         .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
         .brand{font-weight:700;font-size:20px;display:flex;align-items:center;gap:10px}
         .theme-buttons{display:flex;gap:8px}
         .theme-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.18);backdrop-filter: blur(6px);cursor:pointer}
         .theme-btn:hover{transform:translateY(-3px);transition:all .18s}
         .layout{display:grid;grid-template-columns:1fr 2fr;gap:20px;margin-top:22px}
-        .card{padding:18px;border-radius:14px;box-shadow:0 10px 30px rgba(15,15,25,0.08);backdrop-filter: blur(8px)}
+        .card{padding:18px;border-radius:14px;box-shadow:0 10px 30px rgba(15,15,25,0.08);backdrop-filter: blur(8px);opacity:0;transform:scale(0.95);transition:opacity 0.6s ease, transform 0.6s ease;}
+        .fade-in .card{opacity:1;transform:scale(1);}
         .es-form{display:flex;flex-direction:column;gap:10px}
         .es-row{display:flex;gap:10px}
         .es-input{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);outline:none}
@@ -264,184 +243,191 @@ export default function app() {
         @media(max-width:900px){.layout{grid-template-columns:1fr;}.charts-wrap{flex-direction:column}}
       `}</style>
 
-      <div className="topbar">
-        <div className="brand">
-          <img
-            src={logoSrc}
-            alt="SpendSmart logo"
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 10,
-              objectFit: "cover",
-              boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
-            }}
-          />
-          <div>
-            SpendSmart{" "}
-            <span
-              className="muted"
-              style={{ fontWeight: 500, marginLeft: 8, fontSize: 12 }}
-            >
-              — your pocketmoney wingman
-            </span>
-          </div>
+      {showTransition && (
+        <div className="transition-overlay" onClick={handleLogoClick}>
+          <img src={logoSrc} alt="Logo" className="transition-logo" />
         </div>
+      )}
 
-        <div className="theme-buttons">
-          <button
-            className="theme-btn"
-            onClick={() => setTheme("clean")}
-            title="Clean"
-            style={{ color: cfg.text }}
-          >
-            <IconSun /> Clean
-          </button>
-          <button
-            className="theme-btn"
-            onClick={() => setTheme("dark")}
-            title="Dark"
-            style={{ color: cfg.text }}
-          >
-            <IconMoon /> Dark
-          </button>
-          <button
-            className="theme-btn"
-            onClick={() => setTheme("aesthetic")}
-            title="Aesthetic"
-            style={{ color: cfg.text }}
-          >
-            <IconSparkle /> Aesthetic
-          </button>
-        </div>
-      </div>
-
-      <div className="layout">
-        <section className="card" style={{ background: cfg.card }}>
-          <h3 style={{ margin: 0 }}>Add Expense</h3>
-          <div style={{ height: 8 }} />
-          <ExpenseForm onAdd={addExpense} />
-
-          <div style={{ height: 8 }} />
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <label className="muted">Filter Day</label>
-            <input
-              className="es-input"
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-            />
-            <label className="muted">Filter Month</label>
-            <input
-              className="es-input"
-              type="month"
-              value={filterMonth}
-              onChange={(e) => setFilterMonth(e.target.value)}
-            />
-            <button
-              className="btn-ghost"
-              onClick={() => {
-                setFilterDate("");
-                setFilterMonth("");
-              }}
-            >
-              Clear
-            </button>
-          </div>
-
-          <div style={{ height: 12 }} />
-          <div className="muted">
-            Monthly total: <strong>₹{totals.monthly}</strong>
-          </div>
-        </section>
-
-        <section className="card" style={{ background: cfg.card }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <h3 style={{ margin: 0 }}>Spending Overview</h3>
-            <div className="muted">
-              Showing: {filterDate || filterMonth || "All"}
-            </div>
-          </div>
-
-          <div style={{ height: 12 }} />
-          <div className="charts-wrap">
-            <div style={{ flex: 1, height: 260 }}>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={aggregateForBarChart(filtered)}>
-                  <XAxis dataKey="label" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div style={{ flex: 1, height: 260 }}>
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={totals.byCategory}
-                    dataKey="value"
-                    nameKey="name"
-                    outerRadius={80}
-                    innerRadius={30}
-                  >
-                    {totals.byCategory.map((entry, index) => (
-                      <Cell key={entry.name + index} fill={pickColor(index)} />
-                    ))}
-                  </Pie>
-                  <Legend verticalAlign="bottom" />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div style={{ height: 12 }} />
-          <h4 style={{ margin: "8px 0" }}>Recent Entries</h4>
-          {filtered.length === 0 && (
-            <div className="muted">No entries yet.</div>
-          )}
-          {filtered.map((e) => (
-            <div
-              key={e.id}
-              className="expense-entry"
-              style={{
-                background:
-                  theme === "dark" ? "#0f1720" : "rgba(255,255,255,0.5)",
-              }}
-            >
+      {!showTransition && (
+        <div
+          className={`app-root ${fadeInDashboard ? "fade-in" : ""}`}
+          style={{ background: cfg.bg, color: cfg.text, minHeight: "100vh" }}
+        >
+          <div className="topbar">
+            <div className="brand">
+              <img
+                src={logoSrc}
+                alt="logo"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 10,
+                  objectFit: "cover",
+                  boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
+                }}
+              />
               <div>
-                <div style={{ fontWeight: 600 }}>
-                  {e.category} <span className="muted">• ₹{e.amount}</span>
-                </div>
-                <div className="muted" style={{ marginTop: 6 }}>
-                  {e.note || <em>No note</em>} • {e.date}
-                </div>
+                SpendSmart{" "}
+                <span
+                  className="muted"
+                  style={{ fontWeight: 500, marginLeft: 8, fontSize: 12 }}
+                >
+                  — your pocketmoney wingman
+                </span>
               </div>
-              <div style={{ display: "flex", gap: 8 }}>
+            </div>
+            <div className="theme-buttons">
+              <button
+                className="theme-btn"
+                onClick={() => setTheme("clean")}
+                style={{ color: cfg.text }}
+              >
+                <IconSun /> Clean
+              </button>
+              <button
+                className="theme-btn"
+                onClick={() => setTheme("dark")}
+                style={{ color: cfg.text }}
+              >
+                <IconMoon /> Dark
+              </button>
+              <button
+                className="theme-btn"
+                onClick={() => setTheme("aesthetic")}
+                style={{ color: cfg.text }}
+              >
+                <IconSparkle /> Aesthetic
+              </button>
+            </div>
+          </div>
+
+          <div className="layout">
+            <div className="card" style={{ transitionDelay: "0.2s" }}>
+              <h3>Add Expense</h3>
+              <ExpenseForm onAdd={addExpense} />
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                  marginTop: 12,
+                }}
+              >
+                <label className="muted">Filter Day</label>
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="es-input"
+                />
+                <label className="muted">Filter Month</label>
+                <input
+                  type="month"
+                  value={filterMonth}
+                  onChange={(e) => setFilterMonth(e.target.value)}
+                  className="es-input"
+                />
                 <button
                   className="btn-ghost"
-                  onClick={() => removeExpense(e.id)}
+                  onClick={() => {
+                    setFilterDate("");
+                    setFilterMonth("");
+                  }}
                 >
-                  Delete
+                  Clear
                 </button>
               </div>
+              <div style={{ marginTop: 12 }} className="muted">
+                Monthly total: <strong>₹{totals.monthly}</strong>
+              </div>
             </div>
-          ))}
-        </section>
-      </div>
 
-      <div style={{ height: 28 }} />
-      <div style={{ textAlign: "center" }} className="muted">
-        SpendSmart • Personal project by Vijay
-      </div>
-    </div>
+            <div className="card" style={{ transitionDelay: "0.4s" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <h3>Spending Overview</h3>
+                <div className="muted">
+                  Showing: {filterDate || filterMonth || "All"}
+                </div>
+              </div>
+              <div style={{ height: 12 }} />
+              <div className="charts-wrap">
+                <div style={{ flex: 1, height: 260 }}>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={aggregateForBarChart(filtered)}>
+                      <XAxis dataKey="label" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar
+                        dataKey="value"
+                        fill="#8b5cf6"
+                        radius={[6, 6, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div style={{ flex: 1, height: 260 }}>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <PieChart>
+                      <Pie
+                        data={totals.byCategory}
+                        dataKey="value"
+                        nameKey="name"
+                        outerRadius={80}
+                        innerRadius={30}
+                      >
+                        {totals.byCategory.map((entry, i) => (
+                          <Cell key={entry.name + i} fill={pickColor(i)} />
+                        ))}
+                      </Pie>
+                      <Legend verticalAlign="bottom" />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              <h4 style={{ marginTop: 12 }}>Recent Entries</h4>
+              {filtered.length === 0 && (
+                <div className="muted">No entries yet.</div>
+              )}
+              {filtered.map((e) => (
+                <div
+                  key={e.id}
+                  className="expense-entry"
+                  style={{
+                    background:
+                      theme === "dark" ? "#0f1720" : "rgba(255,255,255,0.5)",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600 }}>
+                      {e.category} <span className="muted">• ₹{e.amount}</span>
+                    </div>
+                    <div className="muted" style={{ marginTop: 6 }}>
+                      {e.note || <em>No note</em>} • {e.date}
+                    </div>
+                  </div>
+                  <button
+                    className="btn-ghost"
+                    onClick={() => removeExpense(e.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginTop: 28, textAlign: "center" }} className="muted">
+            SpendSmart • Personal project by Vijay
+          </div>
+        </div>
+      )}
+    </>
   );
 }
-//export default App;
